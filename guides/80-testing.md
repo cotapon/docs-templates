@@ -58,7 +58,7 @@
 #### ❌ テスト不要
 
 - 外部ライブラリの動作
-- 単純なgettersettersettergettersettergettersettergettersettersettergettergettersetter
+- 単純なgetter/setter
 - 型定義のみのファイル
 
 ---
@@ -124,8 +124,11 @@ expect(button).toBeTruthy()
 
 単一の関数・コンポーネントをテスト。
 
+#### Vitest
+
 ```typescript
 // src/lib/utils/__tests__/format-date.spec.ts
+import { describe, it, expect } from 'vitest'
 import { formatDate } from '../format-date'
 
 describe('formatDate', () => {
@@ -140,9 +143,31 @@ describe('formatDate', () => {
 })
 ```
 
+#### Jest
+
+```typescript
+// src/lib/utils/__tests__/format-date.test.ts
+import { formatDate } from '../format-date'
+
+describe('formatDate', () => {
+  test('日付をYYYY/MM/DD形式でフォーマットする', () => {
+    const date = new Date('2024-01-15')
+    expect(formatDate(date)).toBe('2024/01/15')
+  })
+
+  test('nullの場合は空文字を返す', () => {
+    expect(formatDate(null)).toBe('')
+  })
+})
+```
+
+> **Note**: Vitestは `describe`, `it`, `expect` をグローバルに使用可能（設定による）。Jestはデフォルトでグローバル。
+
 ### 2. コンポーネントテスト
 
 UIコンポーネントの表示と振る舞いをテスト。
+
+#### React (Testing Library)
 
 ```typescript
 // src/components/ui/__tests__/Button.spec.tsx
@@ -167,6 +192,61 @@ describe('Button', () => {
     await userEvent.click(screen.getByRole('button'))
 
     expect(handleClick).not.toHaveBeenCalled()
+  })
+})
+```
+
+#### Vue (Testing Library)
+
+```typescript
+// src/components/ui/__tests__/Button.spec.ts
+import { render, screen } from '@testing-library/vue'
+import userEvent from '@testing-library/user-event'
+import Button from '../Button.vue'
+
+describe('Button', () => {
+  it('クリックイベントを発火する', async () => {
+    const { emitted } = render(Button, {
+      slots: { default: 'クリック' }
+    })
+
+    await userEvent.click(screen.getByRole('button'))
+
+    expect(emitted()).toHaveProperty('click')
+  })
+
+  it('disabled時はクリックできない', async () => {
+    const { emitted } = render(Button, {
+      props: { disabled: true },
+      slots: { default: 'クリック' }
+    })
+
+    await userEvent.click(screen.getByRole('button'))
+
+    expect(emitted()).not.toHaveProperty('click')
+  })
+})
+```
+
+#### Svelte (Testing Library)
+
+```typescript
+// src/components/ui/__tests__/Button.spec.ts
+import { render, screen } from '@testing-library/svelte'
+import userEvent from '@testing-library/user-event'
+import Button from '../Button.svelte'
+
+describe('Button', () => {
+  it('クリックイベントを発火する', async () => {
+    const handleClick = vi.fn()
+    render(Button, {
+      props: { onclick: handleClick },
+      // Svelte 5: slots are passed differently
+    })
+
+    await userEvent.click(screen.getByRole('button'))
+
+    expect(handleClick).toHaveBeenCalledTimes(1)
   })
 })
 ```
@@ -199,9 +279,11 @@ describe('ログインフロー', () => {
 })
 ```
 
-### 4. E2Eテスト（Playwright）
+### 4. E2Eテスト
 
 ブラウザでの実際のユーザー操作をテスト。
+
+#### Playwright
 
 ```typescript
 // tests/e2e/login.spec.ts
@@ -221,11 +303,81 @@ test.describe('ログイン', () => {
 })
 ```
 
+#### Cypress
+
+```typescript
+// cypress/e2e/login.cy.ts
+describe('ログイン', () => {
+  it('正常にログインできる', () => {
+    cy.visit('/login')
+
+    cy.get('[name="email"]').type('test@example.com')
+    cy.get('[name="password"]').type('password123')
+    cy.get('button[type="submit"]').click()
+
+    cy.url().should('include', '/dashboard')
+    cy.contains('ようこそ').should('be.visible')
+  })
+
+  it('不正な認証情報でエラーを表示する', () => {
+    cy.visit('/login')
+
+    cy.get('[name="email"]').type('wrong@example.com')
+    cy.get('[name="password"]').type('wrongpassword')
+    cy.get('button[type="submit"]').click()
+
+    cy.contains('認証に失敗しました').should('be.visible')
+  })
+})
+```
+
+#### E2Eツール比較
+
+| 特徴 | Playwright | Cypress |
+|------|-----------|---------|
+| マルチブラウザ | Chrome, Firefox, Safari, Edge | Chrome, Firefox, Edge |
+| 並列実行 | ネイティブサポート | Cypress Cloud必要 |
+| デバッグ | Trace Viewer | Time Travel |
+| API テスト | サポート | `cy.request()` |
+
 ---
 
 ## モック・スタブ
 
 ### API モック（MSW）
+
+#### MSW v2（推奨）
+
+```typescript
+// src/mocks/handlers.ts
+import { http, HttpResponse } from 'msw'
+
+export const handlers = [
+  http.get('/api/users/:id', ({ params }) => {
+    const { id } = params
+    return HttpResponse.json({
+      id,
+      name: 'テストユーザー',
+      email: 'test@example.com',
+    })
+  }),
+
+  http.post('/api/users', async ({ request }) => {
+    const body = await request.json()
+    return HttpResponse.json({ id: '1', ...body }, { status: 201 })
+  }),
+
+  // エラーレスポンス
+  http.get('/api/error', () => {
+    return HttpResponse.json(
+      { message: 'Internal Server Error' },
+      { status: 500 }
+    )
+  }),
+]
+```
+
+#### MSW v1（レガシー）
 
 ```typescript
 // src/mocks/handlers.ts
@@ -276,15 +428,25 @@ vi.mock('@/lib/api-client', () => ({
 ### コマンド
 
 ```bash
-# ユニットテスト
+# ユニットテスト（Vitest）
 npm run test              # 実行
 npm run test:watch        # ウォッチモード
 npm run test:coverage     # カバレッジ付き
 
-# E2Eテスト
+# ユニットテスト（Jest）
+npm test                  # 実行
+npm test -- --watch       # ウォッチモード
+npm test -- --coverage    # カバレッジ付き
+
+# E2Eテスト（Playwright）
 npm run test:e2e          # ヘッドレス実行
 npm run test:e2e:ui       # UIモード（デバッグ用）
-npm run test:e2e:debug    # デバッグモード
+npx playwright test --debug  # デバッグモード
+
+# E2Eテスト（Cypress）
+npm run cypress:open      # インタラクティブモード
+npm run cypress:run       # ヘッドレス実行
+npx cypress run --spec "cypress/e2e/login.cy.ts"  # 特定ファイル実行
 ```
 
 ### CI/CD での実行
