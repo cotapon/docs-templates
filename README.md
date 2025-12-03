@@ -4,7 +4,18 @@
 
 ## 🚀 使い方
 
-### 1. テンプレートをコピー
+### 方法A: Claude Projectで自動生成（推奨）
+
+Claude Projectを使って、対話形式でプロジェクトに合わせたドキュメントを自動生成できます。
+
+1. [Claude](https://claude.ai) でProjectを新規作成
+2. 「ファイルを追加」でこのリポジトリを連携
+3. 「プロジェクトの指示を設定」に [`CLAUDE_PROJECT_INSTRUCTIONS.md`](./CLAUDE_PROJECT_INSTRUCTIONS.md) の内容をコピー
+4. 会話を開始すると、Claudeがプロジェクト情報を質問し、テンプレートからドキュメントを生成
+
+### 方法B: 手動でコピー＆置換
+
+#### 1. テンプレートをコピー
 
 ```bash
 # ドキュメントディレクトリをコピー
@@ -16,7 +27,7 @@ cp docs-templates/AGENTS.template.md your-project/AGENTS.md
 cp docs-templates/AGENTS.template.md your-project/CLAUDE.md
 ```
 
-### 2. プレースホルダーを置換
+#### 2. プレースホルダーを置換
 
 以下のプレースホルダーをプロジェクト固有の値に置換してください：
 
@@ -41,12 +52,12 @@ find docs/ -name "*.md" -exec sed -i '' 's/{{DB_TYPE}}/Supabase/g' {} \;
 find docs/ -name "*.md" -exec sed -i '' 's/{{AUTH_PROVIDER}}/Supabase Auth/g' {} \;
 ```
 
-### 3. 不要なセクションを削除
+#### 3. 不要なセクションを削除
 
 各テンプレート内のコメント `<!-- OPTIONAL: ... -->` で囲まれたセクションは、
 プロジェクトに該当しない場合は削除してください。
 
-### 4. 内容を充実させる
+#### 4. 内容を充実させる
 
 各テンプレートには `<!-- 📝 書くべき内容: ... -->` のガイドがあります。
 これを参考に、プロジェクト固有の内容を記載してください。
