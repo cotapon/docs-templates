@@ -40,13 +40,16 @@ UIコンポーネントをロジック（Container）と表示（Presenter）に
 ```
 src/components/features/
 └── UserProfile/
-    ├── index.ts           # エクスポート
-    ├── Container.tsx      # ロジック層
-    ├── Container.spec.tsx # Containerテスト
-    ├── Presenter.tsx      # 表示層
-    ├── Presenter.spec.tsx # Presenterテスト
-    └── types.ts           # 型定義
+    ├── index.ts              # エクスポート
+    ├── Container.tsx         # ロジック層
+    ├── Container.spec.tsx    # Containerテスト
+    ├── Presenter.tsx         # 表示層
+    ├── Presenter.spec.tsx    # Presenterテスト
+    ├── Presenter.stories.tsx # Storybook（Presenterのみ）
+    └── types.ts              # 型定義
 ```
+
+> **Note**: Storybookは表示層（Presenter）のみ作成。Containerはロジック層のためStorybook不要。
 
 ### 実装例
 
@@ -256,14 +259,19 @@ Atoms（原子）
 src/components/
 ├── atoms/
 │   ├── Button/
+│   │   ├── index.ts
 │   │   ├── Button.tsx
 │   │   ├── Button.spec.tsx
-│   │   └── index.ts
+│   │   └── Button.stories.tsx
 │   ├── Input/
 │   ├── Label/
 │   └── Icon/
 ├── molecules/
 │   ├── SearchForm/
+│   │   ├── index.ts
+│   │   ├── SearchForm.tsx
+│   │   ├── SearchForm.spec.tsx
+│   │   └── SearchForm.stories.tsx
 │   ├── FormField/
 │   └── NavItem/
 ├── organisms/
@@ -277,6 +285,8 @@ src/components/
     ├── Dashboard/
     └── Login/
 ```
+
+> **Note**: テスト（`.spec.tsx`）とStorybook（`.stories.tsx`）はコンポーネントと同一ディレクトリに配置（コロケーション）。
 
 ### 実装例
 

@@ -16,10 +16,11 @@
 ## 📚 目次
 
 1. [テスト戦略](#テスト戦略)
-2. [テストの書き方](#テストの書き方)
-3. [テストの種類](#テストの種類)
-4. [モック・スタブ](#モックスタブ)
-5. [テスト実行](#テスト実行)
+2. [テストファイルの配置](#テストファイルの配置)
+3. [テストの書き方](#テストの書き方)
+4. [テストの種類](#テストの種類)
+5. [モック・スタブ](#モックスタブ)
+6. [テスト実行](#テスト実行)
 
 ---
 
@@ -60,6 +61,58 @@
 - 外部ライブラリの動作
 - 単純なgetter/setter
 - 型定義のみのファイル
+
+---
+
+## テストファイルの配置
+
+### コロケーション（推奨）
+
+テストファイルはコンポーネントと同一ディレクトリに配置します。
+
+```
+src/components/atoms/Button/
+├── index.ts
+├── Button.tsx
+├── Button.spec.tsx      # ユニット/コンポーネントテスト
+└── Button.stories.tsx   # Storybook
+```
+
+### Container/Presenter パターンの場合
+
+```
+src/components/features/UserProfile/
+├── index.ts
+├── Container.tsx
+├── Container.spec.tsx    # Containerテスト（ロジック）
+├── Presenter.tsx
+├── Presenter.spec.tsx    # Presenterテスト（UI）
+├── Presenter.stories.tsx # Storybookは Presenter のみ
+└── types.ts
+```
+
+### E2Eテスト
+
+E2Eテストはプロジェクトルートの `tests/e2e/` に配置します。
+
+```
+tests/
+└── e2e/
+    ├── auth/
+    │   ├── login.spec.ts
+    │   └── logout.spec.ts
+    ├── dashboard.spec.ts
+    └── settings.spec.ts
+```
+
+### 配置ルールまとめ
+
+| テスト種類 | 配置場所 | ファイル名 |
+|-----------|---------|-----------|
+| ユニットテスト | コンポーネントと同一ディレクトリ | `*.spec.tsx` |
+| コンポーネントテスト | コンポーネントと同一ディレクトリ | `*.spec.tsx` |
+| 統合テスト | 機能ディレクトリ内 | `*.spec.tsx` |
+| E2Eテスト | `tests/e2e/` | `*.spec.ts` |
 
 ---
 
