@@ -86,7 +86,10 @@ GitHubから連携されたテンプレートに従い、ユーザーとの対�
 | 2 | `docs/guides/00-overview.md` | ドキュメントの起点・ナビゲーション | 不可 |
 | 3 | `docs/guides/10-architecture.md` | 技術スタック・全体設計 | 可 |
 | 4 | `docs/guides/20-clean-architecture.md` | レイヤー設計 | 可 |
-| 5 | `docs/guides/30-implementation-patterns.md` | 実装パターン | 可 |
+| 5 | `docs/guides/30-implementation-patterns.md` | 実装パターン（概念） | 可 |
+| 5a | `docs/guides/31-implementation-patterns-react.md` | React実装例 | {{TECH_STACK}}による |
+| 5b | `docs/guides/32-implementation-patterns-vue.md` | Vue実装例 | {{TECH_STACK}}による |
+| 5c | `docs/guides/33-implementation-patterns-svelte.md` | Svelte実装例 | {{TECH_STACK}}による |
 | 6 | `docs/guides/40-domain-modeling.md` | ドメイン設計 | 可 |
 | 7 | `docs/guides/50-coding-standards.md` | コーディング規約 | 不可 |
 | 8 | `docs/guides/55-error-handling.md` | エラーハンドリング | 可 |
@@ -98,6 +101,11 @@ GitHubから連携されたテンプレートに従い、ユーザーとの対�
 | 14 | `docs/specs/database.md` | DB設計 | 可 |
 | 15 | `docs/specs/requirements.md` | 要件定義 | 可 |
 | 16 | `docs/specs/commands.md` | コマンドリファレンス | 不可 |
+
+> **Note**: 31/32/33 は Phase 1 で収集した `{{TECH_STACK}}` に応じて該当するものだけを作成します。
+> - Next.js / React → 31-react.md
+> - Nuxt / Vue → 32-vue.md
+> - SvelteKit / Svelte → 33-svelte.md
 
 ### 作成フロー
 

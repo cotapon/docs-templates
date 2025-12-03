@@ -2,26 +2,26 @@
 
 {{PROJECT_NAME}} で採用している実装パターンとテンプレートを説明します。
 
-<!-- 
+<!--
 📝 書くべき内容:
 - プロジェクトで採用している実装パターン
 - 各パターンの目的と使い方
-- コード例とディレクトリ構造
-- テスト方針
+- ディレクトリ構造
 
-例:
-- Container/Presenter パターン
-- Repository パターン
-- Factory パターン
-- Registry パターン
+このファイルは概念説明のみ。
+フレームワーク固有の実装例は以下を参照:
+- 31-implementation-patterns-react.md (React/Next.js)
+- 32-implementation-patterns-vue.md (Vue/Nuxt)
+- 33-implementation-patterns-svelte.md (Svelte/SvelteKit)
 -->
 
 ## 📚 目次
 
 1. [Container/Presenter パターン](#containerpresenter-パターン)
 2. [Repository パターン](#repository-パターン)
-3. [カスタムフックパターン](#カスタムフックパターン)
+3. [ロジック再利用パターン](#ロジック再利用パターン)
 4. [Atomic Design パターン](#atomic-design-パターン)
+5. [フレームワーク別実装ガイド](#フレームワーク別実装ガイド)
 
 ---
 
@@ -51,78 +51,12 @@ src/components/features/
 
 > **Note**: Storybookは表示層（Presenter）のみ作成。Containerはロジック層のためStorybook不要。
 
-### 実装例
+### 責務の分離
 
-#### 型定義
-
-```typescript
-// types.ts
-export interface UserProfilePresenterProps {
-  user: User | null
-  isLoading: boolean
-  error: string | null
-  onEdit: () => void
-}
-```
-
-#### Presenter（表示層）
-
-```typescript
-// Presenter.tsx
-/**
- * ユーザープロフィールの表示コンポーネント
- * @param props - UserProfilePresenterProps
- */
-export function UserProfilePresenter({
-  user,
-  isLoading,
-  error,
-  onEdit,
-}: UserProfilePresenterProps) {
-  if (isLoading) return <Skeleton />
-  if (error) return <ErrorMessage message={error} />
-  if (!user) return <EmptyState />
-
-  return (
-    <Card>
-      <CardHeader>
-        <h2>{user.name}</h2>
-      </CardHeader>
-      <CardContent>
-        <p>{user.email}</p>
-        <Button onClick={onEdit}>編集</Button>
-      </CardContent>
-    </Card>
-  )
-}
-```
-
-#### Container（ロジック層）
-
-```typescript
-// Container.tsx
-/**
- * ユーザープロフィールのロジックコンポーネント
- * データ取得とイベントハンドリングを担当
- */
-export function UserProfileContainer({ userId }: { userId: string }) {
-  const { user, isLoading, error } = useUser(userId)
-  const router = useRouter()
-
-  const handleEdit = useCallback(() => {
-    router.push(`/users/${userId}/edit`)
-  }, [router, userId])
-
-  return (
-    <UserProfilePresenter
-      user={user}
-      isLoading={isLoading}
-      error={error}
-      onEdit={handleEdit}
-    />
-  )
-}
-```
+| 層 | 責務 | 含むもの |
+|---|------|---------|
+| **Container** | ロジック | データ取得、状態管理、イベントハンドラー |
+| **Presenter** | 表示 | UI描画、スタイル、ユーザー操作の受付 |
 
 ### テスト方針
 
@@ -130,6 +64,14 @@ export function UserProfileContainer({ userId }: { userId: string }) {
 |------|----------|
 | Presenter | UI表示、各状態（loading/error/empty）の確認 |
 | Container | データ取得、イベントハンドラーの呼び出し |
+
+### フレームワーク別の実装
+
+| フレームワーク | Container | Presenter |
+|--------------|-----------|-----------|
+| **React** | Custom Hooks + JSX | Function Component |
+| **Vue** | Composition API (`<script setup>`) | Template |
+| **Svelte** | Stores / Runes | .svelte Component |
 
 ---
 
@@ -143,9 +85,7 @@ export function UserProfileContainer({ userId }: { userId: string }) {
 - **テスタビリティ**: モックに置き換え可能
 - **一貫性**: データアクセスの方法を統一
 
-### 実装例
-
-#### インターフェース（Domain層）
+### インターフェース設計
 
 ```typescript
 // src/core/domain/repositories/user-repository.ts
@@ -157,66 +97,42 @@ export interface IUserRepository {
 }
 ```
 
-#### 実装（Infrastructure層）
+### ディレクトリ構造
 
-```typescript
-// src/core/infrastructure/repositories/user-repository-impl.ts
-export class UserRepositoryImpl implements IUserRepository {
-  constructor(private apiClient: ApiClient) {}
-
-  async findById(id: string): Promise<User | null> {
-    const response = await this.apiClient.get(`/users/${id}`)
-    return response.data
-  }
-
-  // ... その他のメソッド
-}
+```
+src/core/
+├── domain/
+│   └── repositories/
+│       └── user-repository.ts      # インターフェース
+└── infrastructure/
+    └── repositories/
+        └── user-repository-impl.ts # 実装
 ```
 
 ---
 
-## カスタムフックパターン
+## ロジック再利用パターン
 
-Reactのカスタムフックを使ってロジックを再利用可能にするパターンです。
+ビジネスロジックを再利用可能な単位に分離するパターンです。フレームワークによって実装方法が異なります。
 
-### 命名規則
+### フレームワーク別の名称
 
-- `use` プレフィックス必須
+| フレームワーク | 名称 | ファイル配置 |
+|--------------|------|-------------|
+| **React** | Custom Hooks | `src/hooks/useXxx.ts` |
+| **Vue** | Composables | `src/composables/useXxx.ts` |
+| **Svelte** | Stores / Runes | `src/stores/xxx.ts` |
+
+### 共通の命名規則
+
+- `use` プレフィックス（React/Vue）
 - 動詞 + 名詞: `useUserProfile`, `useFetchData`
 
-### 実装例
+### 責務
 
-```typescript
-// src/hooks/use-user.ts
-/**
- * ユーザー情報を取得するフック
- * @param userId - ユーザーID
- * @returns ユーザー情報、ローディング状態、エラー
- */
-export function useUser(userId: string) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        setIsLoading(true)
-        const data = await userRepository.findById(userId)
-        setUser(data)
-      } catch (e) {
-        setError('ユーザーの取得に失敗しました')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchUser()
-  }, [userId])
-
-  return { user, isLoading, error }
-}
-```
+- 状態管理
+- 副作用（API呼び出し等）
+- ビジネスロジック
 
 ---
 
@@ -258,161 +174,22 @@ Atoms（原子）
 ```
 src/components/
 ├── atoms/
-│   ├── Button/
-│   │   ├── index.ts
-│   │   ├── Button.tsx
-│   │   ├── Button.spec.tsx
-│   │   └── Button.stories.tsx
-│   ├── Input/
-│   ├── Label/
-│   └── Icon/
+│   └── Button/
+│       ├── index.ts
+│       ├── Button.tsx          # or .vue / .svelte
+│       ├── Button.spec.tsx
+│       └── Button.stories.tsx
 ├── molecules/
-│   ├── SearchForm/
-│   │   ├── index.ts
-│   │   ├── SearchForm.tsx
-│   │   ├── SearchForm.spec.tsx
-│   │   └── SearchForm.stories.tsx
-│   ├── FormField/
-│   └── NavItem/
+│   └── SearchForm/
 ├── organisms/
-│   ├── Header/
-│   ├── Sidebar/
-│   └── UserCard/
+│   └── Header/
 ├── templates/
-│   ├── DashboardLayout/
-│   └── AuthLayout/
+│   └── DashboardLayout/
 └── pages/
-    ├── Dashboard/
-    └── Login/
+    └── Dashboard/
 ```
 
 > **Note**: テスト（`.spec.tsx`）とStorybook（`.stories.tsx`）はコンポーネントと同一ディレクトリに配置（コロケーション）。
-
-### 実装例
-
-#### Atoms: Button
-
-```typescript
-// src/components/atoms/Button/Button.tsx
-interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'ghost'
-  size?: 'sm' | 'md' | 'lg'
-  children: React.ReactNode
-  onClick?: () => void
-  disabled?: boolean
-}
-
-export function Button({
-  variant = 'primary',
-  size = 'md',
-  children,
-  onClick,
-  disabled,
-}: ButtonProps) {
-  return (
-    <button
-      className={`btn btn-${variant} btn-${size}`}
-      onClick={onClick}
-      disabled={disabled}
-    >
-      {children}
-    </button>
-  )
-}
-```
-
-#### Molecules: SearchForm
-
-```typescript
-// src/components/molecules/SearchForm/SearchForm.tsx
-import { Button } from '@/components/atoms/Button'
-import { Input } from '@/components/atoms/Input'
-
-interface SearchFormProps {
-  onSearch: (query: string) => void
-  placeholder?: string
-}
-
-export function SearchForm({ onSearch, placeholder = '検索...' }: SearchFormProps) {
-  const [query, setQuery] = useState('')
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSearch(query)
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="search-form">
-      <Input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder={placeholder}
-      />
-      <Button type="submit" variant="primary">
-        検索
-      </Button>
-    </form>
-  )
-}
-```
-
-#### Organisms: Header
-
-```typescript
-// src/components/organisms/Header/Header.tsx
-import { Logo } from '@/components/atoms/Logo'
-import { NavItem } from '@/components/molecules/NavItem'
-import { SearchForm } from '@/components/molecules/SearchForm'
-import { UserMenu } from '@/components/molecules/UserMenu'
-
-interface HeaderProps {
-  user: User | null
-  onSearch: (query: string) => void
-}
-
-export function Header({ user, onSearch }: HeaderProps) {
-  return (
-    <header className="header">
-      <Logo />
-      <nav className="header-nav">
-        <NavItem href="/dashboard">ダッシュボード</NavItem>
-        <NavItem href="/projects">プロジェクト</NavItem>
-      </nav>
-      <SearchForm onSearch={onSearch} />
-      <UserMenu user={user} />
-    </header>
-  )
-}
-```
-
-#### Templates: DashboardLayout
-
-```typescript
-// src/components/templates/DashboardLayout/DashboardLayout.tsx
-import { Header } from '@/components/organisms/Header'
-import { Sidebar } from '@/components/organisms/Sidebar'
-
-interface DashboardLayoutProps {
-  children: React.ReactNode
-}
-
-export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { user } = useAuth()
-  const handleSearch = useSearch()
-
-  return (
-    <div className="dashboard-layout">
-      <Header user={user} onSearch={handleSearch} />
-      <div className="dashboard-body">
-        <Sidebar />
-        <main className="dashboard-content">
-          {children}
-        </main>
-      </div>
-    </div>
-  )
-}
-```
 
 ### 依存ルール
 
@@ -444,6 +221,18 @@ src/components/organisms/UserCard/
 
 ---
 
+## フレームワーク別実装ガイド
+
+各フレームワークの具体的な実装例は以下を参照してください：
+
+| フレームワーク | ガイド |
+|--------------|--------|
+| **React / Next.js** | [31-implementation-patterns-react.md](./31-implementation-patterns-react.md) |
+| **Vue / Nuxt** | [32-implementation-patterns-vue.md](./32-implementation-patterns-vue.md) |
+| **Svelte / SvelteKit** | [33-implementation-patterns-svelte.md](./33-implementation-patterns-svelte.md) |
+
+---
+
 ## 関連ドキュメント
 
 - [20-clean-architecture.md](./20-clean-architecture.md) - レイヤー設計
@@ -454,4 +243,3 @@ src/components/organisms/UserCard/
 ---
 
 **最終更新**: YYYY-MM-DD
-

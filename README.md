@@ -79,7 +79,10 @@ docs/
 │   ├── 00-overview.md       # ★必須: ドキュメントの起点
 │   ├── 10-architecture.md   # 技術スタック・全体設計
 │   ├── 20-clean-architecture.md  # レイヤー設計（該当する場合）
-│   ├── 30-implementation-patterns.md  # 実装パターン
+│   ├── 30-implementation-patterns.md  # 実装パターン（概念）
+│   ├── 31-implementation-patterns-react.md   # React/Next.js 実装例
+│   ├── 32-implementation-patterns-vue.md     # Vue/Nuxt 実装例
+│   ├── 33-implementation-patterns-svelte.md  # Svelte/SvelteKit 実装例
 │   ├── 40-domain-modeling.md     # ドメイン設計
 │   ├── 50-coding-standards.md    # ★必須: コーディング規約
 │   ├── 55-error-handling.md      # エラーハンドリング
