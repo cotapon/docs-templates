@@ -21,6 +21,7 @@
 1. [Container/Presenter パターン](#containerpresenter-パターン)
 2. [Repository パターン](#repository-パターン)
 3. [カスタムフックパターン](#カスタムフックパターン)
+4. [Atomic Design パターン](#atomic-design-パターン)
 
 ---
 
@@ -39,12 +40,12 @@ UIコンポーネントをロジック（Container）と表示（Presenter）に
 ```
 src/components/features/
 └── UserProfile/
-    ├── index.ts                           # エクスポート
-    ├── UserProfile.container.tsx          # ロジック層
-    ├── UserProfile.container.spec.tsx     # Containerテスト
-    ├── UserProfile.presenter.tsx          # 表示層
-    ├── UserProfile.presenter.spec.tsx     # Presenterテスト
-    └── UserProfile.types.ts               # 型定義
+    ├── index.ts           # エクスポート
+    ├── Container.tsx      # ロジック層
+    ├── Container.spec.tsx # Containerテスト
+    ├── Presenter.tsx      # 表示層
+    ├── Presenter.spec.tsx # Presenterテスト
+    └── types.ts           # 型定義
 ```
 
 ### 実装例
@@ -52,7 +53,7 @@ src/components/features/
 #### 型定義
 
 ```typescript
-// UserProfile.types.ts
+// types.ts
 export interface UserProfilePresenterProps {
   user: User | null
   isLoading: boolean
@@ -64,7 +65,7 @@ export interface UserProfilePresenterProps {
 #### Presenter（表示層）
 
 ```typescript
-// UserProfile.presenter.tsx
+// Presenter.tsx
 /**
  * ユーザープロフィールの表示コンポーネント
  * @param props - UserProfilePresenterProps
@@ -96,7 +97,7 @@ export function UserProfilePresenter({
 #### Container（ロジック層）
 
 ```typescript
-// UserProfile.container.tsx
+// Container.tsx
 /**
  * ユーザープロフィールのロジックコンポーネント
  * データ取得とイベントハンドリングを担当
@@ -212,6 +213,223 @@ export function useUser(userId: string) {
 
   return { user, isLoading, error }
 }
+```
+
+---
+
+## Atomic Design パターン
+
+UIコンポーネントを5つの階層に分類し、再利用性と一貫性を高めるパターンです。
+
+### 目的
+
+- **再利用性**: 小さな部品から組み立てることで再利用を促進
+- **一貫性**: デザインシステムとの整合性を保つ
+- **スケーラビリティ**: 大規模なUIでも管理しやすい構造
+- **チーム開発**: 役割分担が明確になる
+
+### 5つの階層
+
+```
+Pages（ページ）
+  ↑
+Templates（テンプレート）
+  ↑
+Organisms（有機体）
+  ↑
+Molecules（分子）
+  ↑
+Atoms（原子）
+```
+
+| 階層 | 説明 | 例 |
+|------|------|-----|
+| **Atoms** | 最小単位のUI要素 | Button, Input, Label, Icon, Badge |
+| **Molecules** | Atomsを組み合わせた小さな機能単位 | SearchForm, FormField, MenuItem |
+| **Organisms** | Molecules/Atomsで構成される複雑なUI | Header, Sidebar, Card, DataTable |
+| **Templates** | ページのレイアウト構造（データなし） | DashboardLayout, AuthLayout |
+| **Pages** | Templatesに実データを流し込んだもの | DashboardPage, LoginPage |
+
+### ディレクトリ構造
+
+```
+src/components/
+├── atoms/
+│   ├── Button/
+│   │   ├── Button.tsx
+│   │   ├── Button.spec.tsx
+│   │   └── index.ts
+│   ├── Input/
+│   ├── Label/
+│   └── Icon/
+├── molecules/
+│   ├── SearchForm/
+│   ├── FormField/
+│   └── NavItem/
+├── organisms/
+│   ├── Header/
+│   ├── Sidebar/
+│   └── UserCard/
+├── templates/
+│   ├── DashboardLayout/
+│   └── AuthLayout/
+└── pages/
+    ├── Dashboard/
+    └── Login/
+```
+
+### 実装例
+
+#### Atoms: Button
+
+```typescript
+// src/components/atoms/Button/Button.tsx
+interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'ghost'
+  size?: 'sm' | 'md' | 'lg'
+  children: React.ReactNode
+  onClick?: () => void
+  disabled?: boolean
+}
+
+export function Button({
+  variant = 'primary',
+  size = 'md',
+  children,
+  onClick,
+  disabled,
+}: ButtonProps) {
+  return (
+    <button
+      className={`btn btn-${variant} btn-${size}`}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {children}
+    </button>
+  )
+}
+```
+
+#### Molecules: SearchForm
+
+```typescript
+// src/components/molecules/SearchForm/SearchForm.tsx
+import { Button } from '@/components/atoms/Button'
+import { Input } from '@/components/atoms/Input'
+
+interface SearchFormProps {
+  onSearch: (query: string) => void
+  placeholder?: string
+}
+
+export function SearchForm({ onSearch, placeholder = '検索...' }: SearchFormProps) {
+  const [query, setQuery] = useState('')
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSearch(query)
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="search-form">
+      <Input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={placeholder}
+      />
+      <Button type="submit" variant="primary">
+        検索
+      </Button>
+    </form>
+  )
+}
+```
+
+#### Organisms: Header
+
+```typescript
+// src/components/organisms/Header/Header.tsx
+import { Logo } from '@/components/atoms/Logo'
+import { NavItem } from '@/components/molecules/NavItem'
+import { SearchForm } from '@/components/molecules/SearchForm'
+import { UserMenu } from '@/components/molecules/UserMenu'
+
+interface HeaderProps {
+  user: User | null
+  onSearch: (query: string) => void
+}
+
+export function Header({ user, onSearch }: HeaderProps) {
+  return (
+    <header className="header">
+      <Logo />
+      <nav className="header-nav">
+        <NavItem href="/dashboard">ダッシュボード</NavItem>
+        <NavItem href="/projects">プロジェクト</NavItem>
+      </nav>
+      <SearchForm onSearch={onSearch} />
+      <UserMenu user={user} />
+    </header>
+  )
+}
+```
+
+#### Templates: DashboardLayout
+
+```typescript
+// src/components/templates/DashboardLayout/DashboardLayout.tsx
+import { Header } from '@/components/organisms/Header'
+import { Sidebar } from '@/components/organisms/Sidebar'
+
+interface DashboardLayoutProps {
+  children: React.ReactNode
+}
+
+export function DashboardLayout({ children }: DashboardLayoutProps) {
+  const { user } = useAuth()
+  const handleSearch = useSearch()
+
+  return (
+    <div className="dashboard-layout">
+      <Header user={user} onSearch={handleSearch} />
+      <div className="dashboard-body">
+        <Sidebar />
+        <main className="dashboard-content">
+          {children}
+        </main>
+      </div>
+    </div>
+  )
+}
+```
+
+### 依存ルール
+
+上位階層は下位階層のみに依存できます。
+
+```
+✅ 許可される依存
+  - Molecules → Atoms
+  - Organisms → Molecules, Atoms
+  - Templates → Organisms, Molecules, Atoms
+  - Pages → Templates, Organisms, Molecules, Atoms
+
+❌ 禁止される依存
+  - Atoms → Molecules（下位が上位に依存）
+  - Molecules → Organisms
+  - 同階層間の依存（Atom A → Atom B）※例外あり
+```
+
+### Container/Presenter との併用
+
+Atomic Design と Container/Presenter パターンは併用可能です。
+
+```
+src/components/organisms/UserCard/
+├── Container.tsx    # Container: データ取得
+├── Presenter.tsx    # Presenter: 表示（Atoms/Moleculesを使用）
+└── index.ts
 ```
 
 ---
