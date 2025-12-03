@@ -112,7 +112,7 @@
 ┌─────────────────────────────────────┐
 │   Presentation Layer (UI)           │  ← src/app, src/components
 ├─────────────────────────────────────┤
-│   Business Logic Layer              │  ← src/hooks, src/lib
+│   Business Logic Layer              │  ← src/hooks (React) / src/composables (Vue) / src/stores (Svelte)
 ├─────────────────────────────────────┤
 │   Data Access Layer                 │  ← src/services, src/api
 ├─────────────────────────────────────┤
@@ -130,7 +130,7 @@
 
 1. **単一責任の原則**: 1つのコンポーネントは1つの責任のみ
 2. **コンポジション**: 小さなコンポーネントを組み合わせる
-3. **Props のドリルダウン回避**: Context API や状態管理を活用
+3. **Props のドリルダウン回避**: 状態管理を活用（React: Context API / Vue: Provide/Inject / Svelte: Stores）
 
 ---
 
@@ -146,11 +146,11 @@
 │   └── specs/                  # 仕様リファレンス（What-is）
 ├── public/                     # 静的ファイル
 ├── src/                        # ソースコード
-│   ├── app/                    # ページ・ルーティング
+│   ├── app/                    # ページ・ルーティング（※フレームワークにより異なる）
 │   ├── components/             # UIコンポーネント
 │   │   ├── ui/                 # 基本UIコンポーネント
 │   │   └── features/           # 機能別コンポーネント
-│   ├── hooks/                  # カスタムフック
+│   ├── hooks/                  # ロジック再利用（※下記注参照）
 │   ├── lib/                    # ユーティリティ関数
 │   └── types/                  # 型定義
 ├── tests/                      # テスト
@@ -165,11 +165,16 @@
 |------------|------|
 | `src/app/` | ページコンポーネント、ルーティング |
 | `src/components/` | 再利用可能なUIコンポーネント |
-| `src/hooks/` | カスタムReactフック |
+| `src/hooks/` | ロジック再利用（下記注参照） |
 | `src/lib/` | ユーティリティ関数・ヘルパー |
 | `src/types/` | TypeScript型定義 |
-| `tests/e2e/` | E2Eテスト（Playwright） |
+| `tests/e2e/` | E2Eテスト（Playwright/Cypress） |
 | `docs/` | プロジェクトドキュメント |
+
+> **Note**: ロジック再利用のディレクトリ名はフレームワークにより異なります：
+> - **React**: `src/hooks/` (Custom Hooks)
+> - **Vue**: `src/composables/` (Composables)
+> - **Svelte**: `src/stores/` (Stores/Runes)
 
 ---
 
